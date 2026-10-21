@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thank you for your order — Sunnyside Goods</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#F7F2E9">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/shared/fonts/figtree-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/shared/fonts/fraunces-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/shared/fonts.css">
+<script src="/shared/layout.js"></script>
+<style>
+  body { margin:0; background:#F7F2E9; color:#2B2420; font-family:'Figtree',sans-serif; line-height:1.7; overflow-x:hidden; }
+  main { max-width:620px; margin:0 auto; padding:56px 20px 24px; text-align:center; }
+  .tick { width:64px; height:64px; border-radius:50%; background:#3A6B5C; color:#fff; font-size:34px; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; }
+  h1 { font-family:'Fraunces',serif; font-size:34px; line-height:1.15; margin:0 0 12px; }
+  p { color:#4A4238; font-size:16px; margin:0 0 14px; }
+  .order { display:inline-block; background:#fff; border:1px solid #E5DCC9; border-radius:10px; padding:8px 16px; font-weight:700; margin:6px 0 20px; word-break:break-all; }
+  a.btn { display:inline-block; background:#C4501F; color:#fff; text-decoration:none; padding:14px 28px; border-radius:999px; font-weight:700; margin-top:10px; }
+  a { color:#3A6B5C; }
+</style>
+</head><body>
+<site-header></site-header>
+<main>
+  <div class="tick" aria-hidden="true">✓</div>
+  <h1>Thank you for your order!</h1>
+  <p>Your payment went through. PayPal will email you a receipt, and we'll email your tracking details once your order ships.</p>
+  <div id="order-wrap" style="display:none;">
+    <p style="margin:0;">Order reference</p>
+    <div class="order" id="order-id"></div>
+  </div>
+  <p>Questions about your order? See our <a href="/shipping/">shipping policy</a> or <a href="/contact/">contact us</a>, and quote your order reference.</p>
+  <a class="btn" href="/">Keep browsing</a>
+</main>
+<site-footer></site-footer>
+<script>
+  var id = new URLSearchParams(location.search).get('order');
+  if (id && /^[A-Za-z0-9_-]{6,40}$/.test(id)) {
+    document.getElementById('order-id').textContent = id;
+    document.getElementById('order-wrap').style.display = 'block';
+  }
+</script>
+</body></html>
