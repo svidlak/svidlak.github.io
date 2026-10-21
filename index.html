@@ -43,22 +43,11 @@
   }
   @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
 </style>
+<script src="/shared/layout.js"></script>
 </head>
 <body>
 
-<header>
-  <div class="wrap">
-    <a href="./" class="brand serif">
-      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <circle cx="12" cy="12" r="5" fill="#E8754A"/>
-        <g stroke="#E8754A" stroke-width="2" stroke-linecap="round">
-          <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>
-        </g>
-      </svg>
-      Sunnyside Goods
-    </a>
-  </div>
-</header>
+<site-header></site-header>
 
 <main>
   <section class="hero wrap">
@@ -89,12 +78,7 @@
   </section>
 </main>
 
-<footer>
-  <div class="wrap">
-    <span>© <span id="yr"></span> Sunnyside Goods</span>
-    <span style="display:flex;gap:16px;flex-wrap:wrap;"><a href="/terms/">Terms</a><a href="/privacy/">Privacy</a><a href="/refunds/">Refunds</a><a href="/shipping/">Shipping</a><a href="/contact/">Contact</a></span>
-  </div>
-</footer>
+<site-footer></site-footer>
 <!-- Paddle.js on the root so it can serve as the default payment link page -->
 <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
 <script>
@@ -103,6 +87,5 @@
     Paddle.Initialize({ token: 'test_236f54bc89b1d616f06720798c5' });
   }
 </script>
-<script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
 </body>
 </html>

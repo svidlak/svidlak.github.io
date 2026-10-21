@@ -19,8 +19,9 @@
   footer a { color:var(--muted); }
   @media (max-width:600px){ h1{font-size:28px;} }
 </style>
+<script src="/shared/layout.js"></script>
 </head><body>
-<header><a href="/">Sunnyside Goods</a></header>
+<site-header></site-header>
 <main>
 <h1>Contact</h1>
 <p class="updated">Last updated: [[DATE]]</p>
@@ -34,9 +35,5 @@
 <ul><li>Your order number</li><li>The email you ordered with</li><li>A photo, if something arrived damaged</li></ul>
 
 </main>
-<footer>
-  <a href="/terms/">Terms</a><a href="/privacy/">Privacy</a><a href="/refunds/">Refunds</a><a href="/shipping/">Shipping</a><a href="/contact/">Contact</a>
-  <span>© <span id="yr"></span> Sunnyside Goods</span>
-</footer>
-<script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+<site-footer></site-footer>
 </body></html>
