@@ -57,6 +57,7 @@
   }
 </style>
 <script src="/shared/layout.js"></script>
+<script src="/shared/analytics.js"></script>
 </head>
 <body>
 
@@ -321,6 +322,15 @@
   }
 })();
 </script>
+<div id="pf-wl" role="dialog" aria-modal="true" aria-labelledby="pf-wl-title" style="display: none; position: fixed; inset: 0; z-index: 80; background: rgba(43,36,32,0.55); align-items: center; justify-content: center; padding: 16px;">
+  <div style="position: relative; background: #fff; border-radius: 20px; max-width: 420px; width: 100%; padding: 32px 24px 24px; text-align: center;">
+    <button type="button" id="pf-wl-close" aria-label="Close" style="position: absolute; top: 8px; right: 14px; background: none; border: 0; font-size: 28px; line-height: 1; cursor: pointer; color: #6B6354;">×</button>
+    <div style="font-size: 36px; margin-bottom: 8px;">🐾</div>
+    <h2 id="pf-wl-title" class="pf-h" style="font-size: 24px; margin: 0 0 10px;">Not on sale just yet</h2>
+    <p style="font-size: 15px; line-height: 1.6; color: #4A4238; margin: 0 0 18px;">Thanks for your interest! We're not taking orders yet, but we're launching soon. Nothing has been charged.</p>
+    <button type="button" id="pf-wl-ok" style="background: #C4501F; color: #fff; border: 0; border-radius: 999px; padding: 13px 28px; font: 700 15px 'Figtree', sans-serif; cursor: pointer;">Got it</button>
+  </div>
+</div>
 <script>
 (function () {
   // Paddle SANDBOX catalog: one product + one $24.99 price per color/size variant
@@ -407,6 +417,14 @@
       var w = document.getElementById('pf-paypal-wrap'); if (w) w.style.display = 'none';
     });
   }
+  // WAITLIST MODE: no payments are taken; Add to Cart records the event and shows a "not on sale yet" note.
+  // Set to false to switch real checkout (Paddle / PayPal) back on.
+  var WAITLIST = true;
+  var skuNow = function () { return 'pawfresh-' + state.color + '-' + state.size; };
+  var trackParams = function () { return { content_ids: [skuNow()], content_name: 'PawFresh Paw Washer - ' + cap(state.color) + ' / ' + cap(state.size), content_type: 'product', value: +(UNIT * state.qty).toFixed(2), currency: 'USD', num_items: state.qty }; };
+  var wl = document.getElementById('pf-wl');
+  function showWaitlist() { wl.style.display = 'flex'; }
+  function hideWaitlist() { wl.style.display = 'none'; }
   var videoOk = false;
   function ensureVideo() {
     var v = document.getElementById('pf-video');
@@ -417,7 +435,7 @@
   window.addEventListener('load', function () {
     videoOk = true;
     if (state.view === 'video') ensureVideo();
-    (window.requestIdleCallback || function (f) { setTimeout(f, 1500); })(function () { loadPaddle().catch(function () {}); renderPayPal(); });
+    (window.requestIdleCallback || function (f) { setTimeout(f, 1500); })(function () { if (WAITLIST) return; loadPaddle().catch(function () {}); renderPayPal(); });
   });
   var names = { orange: 'Orange', blue: 'Blue', green: 'Green' };
   var src = function (c, z) { return 'assets/variants/' + c + '-' + z + '.webp'; };
@@ -451,13 +469,13 @@
     });
   }
   document.querySelectorAll('.pf-color').forEach(function (b) {
-    b.addEventListener('click', function () { state.color = b.dataset.color; state.view = 'image'; render(); });
+    b.addEventListener('click', function () { state.color = b.dataset.color; state.view = 'image'; render(); sgTrack('SelectVariant', trackParams()); });
   });
   document.querySelectorAll('.pf-size, .pf-thumb').forEach(function (b) {
-    b.addEventListener('click', function () { state.size = b.dataset.size; state.view = 'image'; render(); });
+    b.addEventListener('click', function () { state.size = b.dataset.size; state.view = 'image'; render(); sgTrack('SelectVariant', trackParams()); });
   });
   document.getElementById('pf-video-thumb').addEventListener('click', function () {
-    state.view = 'video'; videoOk = true; render();
+    state.view = 'video'; videoOk = true; render(); sgTrack('VideoThumbClick', {}, true);
   });
   document.getElementById('pf-qty-minus').addEventListener('click', function () {
     state.qty = Math.max(1, state.qty - 1); render();
@@ -468,6 +486,9 @@
   document.querySelectorAll('.pf-buy').forEach(function (b) {
     b.addEventListener('click', function (e) {
       e.preventDefault();
+      sgTrack('AddToCart', trackParams());
+      if (WAITLIST) { showWaitlist(); return; }
+      sgTrack('InitiateCheckout', trackParams());
       loadPaddle().then(function () {
         Paddle.Checkout.open({
           items: [{ priceId: PRICES[state.color + '-' + state.size], quantity: state.qty }],
@@ -483,6 +504,19 @@
       }).catch(function (err) { console.error('Paddle.js failed to load', err); });
     });
   });
+  document.getElementById('pf-wl-close').addEventListener('click', hideWaitlist);
+  document.getElementById('pf-wl-ok').addEventListener('click', hideWaitlist);
+  wl.addEventListener('click', function (e) { if (e.target === wl) hideWaitlist(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hideWaitlist(); });
+  if (WAITLIST) { var ppw = document.getElementById('pf-paypal-wrap'); if (ppw) ppw.style.display = 'none'; }
+  // Events: product view, video play, scroll depth
+  sgTrack('ViewContent', trackParams(), true);
+  document.getElementById('pf-video').addEventListener('play', function () { sgTrack('VideoPlay', {}, true); });
+  var depths = [25, 50, 75, 100], hit = {};
+  window.addEventListener('scroll', function () {
+    var h = document.documentElement, pct = (h.scrollTop + innerHeight) / h.scrollHeight * 100;
+    depths.forEach(function (d) { if (pct >= d && !hit[d]) { hit[d] = 1; sgTrack('Scroll' + d, {}); } });
+  }, { passive: true });
   render();
 })();
 </script>
