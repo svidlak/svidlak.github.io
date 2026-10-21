@@ -8,11 +8,10 @@
     GA4_ID: '',          // e.g. 'G-XXXXXXXXXX'
     CLARITY_ID: ''       // e.g. 'abcd1234ef' (optional: heatmaps / recordings)
   };
-  // Visitors from these countries get a cookie banner and nothing tracks until they accept.
-  // Everyone else is tracked immediately. Trim or extend this list as your legal advice says.
-  var CONSENT_COUNTRIES = ['GB', 'IL',
-    'AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE', // EU
-    'IS','LI','NO','CH'];                                                                                                                  // EEA + Switzerland
+  // Banner is shown by browser time zone (no network request, so no speed cost).
+  // Covers Israel, the UK, and Europe in general (EU/EEA/CH, plus a few non-EU neighbours, which is harmless).
+  // To limit it to UK + Israel only, use: /^(Europe\/(London|Belfast|Jersey|Guernsey|Isle_of_Man)|Asia\/(Jerusalem|Tel_Aviv))$/
+  var CONSENT_TZ = /^(Europe\/|Asia\/(Jerusalem|Tel_Aviv)$|Atlantic\/(Azores|Canary|Faroe|Madeira|Reykjavik)$)/;
   var META_STANDARD = { PageView:1, ViewContent:1, AddToCart:1, InitiateCheckout:1, AddPaymentInfo:1, Purchase:1, Lead:1, Search:1 };
   var GA_MAP = { ViewContent: 'view_item', AddToCart: 'add_to_cart', InitiateCheckout: 'begin_checkout', Purchase: 'purchase', Lead: 'generate_lead' };
 
@@ -79,17 +78,9 @@
   }
 
   function needsConsent() {
-    return new Promise(function (resolve) {
-      var done = false;
-      function finish(v) { if (!done) { done = true; resolve(v); } }
-      // Fallback if the lookup fails: time zone guess; unknown means ask (fail safe)
-      var tz = ''; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
-      var guess = /^Europe\//.test(tz) || /^Asia\/(Jerusalem|Tel_Aviv)$/.test(tz) || tz === '' ;
-      var t = setTimeout(function () { finish(guess); }, 2500);
-      fetch('https://api.country.is/').then(function (r) { return r.json(); }).then(function (d) {
-        clearTimeout(t); finish(CONSENT_COUNTRIES.indexOf(d.country) !== -1);
-      }).catch(function () { clearTimeout(t); finish(guess); });
-    });
+    var tz = '';
+    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+    return tz === '' || CONSENT_TZ.test(tz);   // unknown time zone: ask (fail safe)
   }
 
   var css = '#sg-cb{position:fixed;left:12px;right:12px;bottom:12px;z-index:90;max-width:560px;margin:0 auto;background:#fff;border:1px solid #E5DCC9;border-radius:16px;box-shadow:0 10px 36px rgba(0,0,0,.18);padding:16px 18px;font:14px/1.5 Figtree,sans-serif;color:#2B2420}' +
@@ -112,10 +103,8 @@
     var s = stored();
     if (s === 'granted') return decide(true);
     if (s === 'denied') return decide(false);
-    needsConsent().then(function (need) {
-      if (!need) return decide(true);
-      banner();   // tracking stays off until the visitor chooses
-    });
+    if (!needsConsent()) return decide(true);
+    banner();   // tracking stays off until the visitor chooses
   }
   if (document.body) init(); else document.addEventListener('DOMContentLoaded', init);
 })();
