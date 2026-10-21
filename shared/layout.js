@@ -41,7 +41,9 @@
     connectedCallback() {
       var links = LINKS.map(function (l) { return '<a href="' + l[1] + '">' + l[0] + '</a>'; }).join('');
       this.innerHTML = '<div class="sg-in"><span>© ' + new Date().getFullYear() + ' ' + BRAND + '</span>' +
-        '<span class="sg-links">' + links + '</span></div>';
+        '<span class="sg-links">' + links + '<a href="#" id="sg-cookie-link">Cookie settings</a></span></div>';
+      var c = this.querySelector('#sg-cookie-link');
+      c.addEventListener('click', function (e) { e.preventDefault(); if (window.sgCookieSettings) window.sgCookieSettings(); });
     }
   });
 })();
