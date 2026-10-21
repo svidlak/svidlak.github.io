@@ -88,6 +88,7 @@
     <a href="#" class="pf-buy" style="background: #C4501F; color: #fff; padding: 11px 22px; border-radius: 999px; font-weight: 700; font-size: 14px;">Get Yours — $24.99</a>
   </div>
 
+  <main>
   <!-- BUY BOX -->
   <div style="max-width: 1180px; margin: 0 auto; padding: 40px var(--gx) 64px; display: flex; gap: var(--gap); flex-wrap: wrap;">
 
@@ -295,6 +296,7 @@
     <p style="color: #fff; opacity: 0.85; font-size: 16px; margin: 0 0 32px;">Join the walk-in-without-worry club.</p>
     <a href="#" style="display: inline-block; background: #fff; color: #3A6B5C; padding: 17px 36px; border-radius: 999px; font-weight: 800; font-size: 17px;">Get My Paw Cleaner — $24.99</a>
   </div>
+  </main>
 
 </div>
 <site-footer></site-footer>
@@ -302,7 +304,8 @@
 (function () {
   // Scroll-reveal for sections below the buy box (progressive: content stays visible without JS)
   var wrap = document.body.querySelector(':scope > div');
-  var secs = wrap ? Array.prototype.slice.call(wrap.children, 3) : [];
+  var mainEl = document.querySelector('main');
+  var secs = mainEl ? Array.prototype.slice.call(mainEl.children, 1) : [];
   if ('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
     document.documentElement.classList.add('js');
     var io = new IntersectionObserver(function (entries) {
