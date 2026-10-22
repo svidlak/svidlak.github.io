@@ -60,11 +60,23 @@
     if (!decided) { queue.push([name, params]); return; }   // wait for the consent decision
     if (allowed) send(name, params);
   };
+  // Meta params -> GA4 ecommerce params (GA4 wants `items`, not content_ids/contents)
+  function toGA(params) {
+    var g = Object.assign({}, params);
+    var contents = g.contents || (g.content_ids || []).map(function (id) { return { id: id, quantity: g.num_items || 1 }; });
+    if (contents.length) {
+      g.items = contents.map(function (c) {
+        return { item_id: c.id, item_name: c.title || g.content_name || c.id, price: c.item_price, quantity: c.quantity || 1 };
+      });
+    }
+    ['contents', 'content_ids', 'content_type', 'content_name', 'num_items'].forEach(function (k) { delete g[k]; });
+    return g;
+  }
   function send(name, params) {
     if (window.fbq) {
       if (META_STANDARD[name]) fbq('track', name, params); else fbq('trackCustom', name, params);
     }
-    if (window.gtag) gtag('event', GA_MAP[name] || name.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase(), params);
+    if (window.gtag) gtag('event', GA_MAP[name] || name.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase(), toGA(params));
     if (!CONFIG.META_PIXEL_ID && !CONFIG.GA4_ID) console.debug('[sgTrack]', name, params);
   }
 

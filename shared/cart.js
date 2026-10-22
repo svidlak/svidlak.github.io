@@ -20,7 +20,7 @@
     if (!window.sgTrack) return;
     sgTrack(name, Object.assign({
       content_ids: items.map(function (i) { return i.sku; }),
-      contents: items.map(function (i) { return { id: i.sku, quantity: i.qty, item_price: i.price }; }),
+      contents: items.map(function (i) { return { id: i.sku, quantity: i.qty, item_price: i.price, title: i.name }; }),
       content_type: 'product', value: +total().toFixed(2), currency: 'USD', num_items: count()
     }, extra || {}));
   }
@@ -163,7 +163,7 @@
       var ex = items.filter(function (i) { return i.sku === it.sku; })[0];
       if (ex) ex.qty = Math.min(MAX_QTY, ex.qty + it.qty);
       else items.push({ sku: it.sku, name: it.name, price: it.price, image: it.image || '', qty: Math.min(MAX_QTY, it.qty) });
-      save(); track('AddToCart', { content_ids: [it.sku], value: +(it.price * it.qty).toFixed(2), num_items: it.qty, contents: [{ id: it.sku, quantity: it.qty, item_price: it.price }] });
+      save(); track('AddToCart', { content_ids: [it.sku], value: +(it.price * it.qty).toFixed(2), num_items: it.qty, contents: [{ id: it.sku, quantity: it.qty, item_price: it.price, title: it.name }], content_name: it.name });
       open();
     },
     open: open, close: close, count: count, clear: function () { items = []; save(); render(); }
