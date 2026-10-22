@@ -41,8 +41,9 @@
     '#sg-dr .q{display:inline-flex;align-items:center;border:1px solid #E5DCC9;border-radius:8px;overflow:hidden}' +
     '#sg-dr .q button{width:30px;height:28px;background:none;border:0;cursor:pointer;font-size:15px}' +
     '#sg-dr .q span{width:30px;text-align:center;font-size:13px;font-weight:600}' +
-    '#sg-dr .rm{background:none;border:0;color:#6B6354;cursor:pointer;font-size:13px;text-decoration:underline;margin-left:auto}' +
-    '#sg-dr .empty{text-align:center;color:#6B6354;margin:48px 0}' +
+    '#sg-dr .rm{background:none;border:0;color:#6B6354;cursor:pointer;margin-left:auto;padding:8px;border-radius:8px;display:flex}#sg-dr .rm:hover{color:#C4501F;background:#FBF1EA}' +
+    '#sg-dr .hd b{display:flex;align-items:center;gap:8px}#sg-dr .x{display:flex;padding:4px}' +
+    '#sg-dr .empty{text-align:center;color:#9A9183;margin:56px 0}#sg-dr .empty p{color:#6B6354}' +
     '#sg-dr .ft{padding:16px 20px calc(16px + env(safe-area-inset-bottom));border-top:1px solid #E5DCC9}' +
     '#sg-dr .tot{display:flex;justify-content:space-between;font-weight:700;margin-bottom:2px}' +
     '#sg-dr .note{font-size:12px;color:#6B6354;margin-bottom:12px}' +
@@ -50,16 +51,22 @@
     '[data-sg-cart-open]{cursor:pointer}';
   document.head.appendChild(css);
 
+  var ICON_CART = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.6 12.2a1.6 1.6 0 0 0 1.6 1.3h8.1a1.6 1.6 0 0 0 1.6-1.2L20.7 7H6"/></svg>';
+  var ICON_CART_BIG = ICON_CART.replace('width="18" height="18"', 'width="44" height="44"').replace('stroke-width="2"', 'stroke-width="1.5"').replace('vertical-align:-3px', 'vertical-align:0');
+  var ICON_TRASH = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m5 5v6m4-6v6"/></svg>';
+  var ICON_CLOSE = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+  var ICON_LOCK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+  var ICON_TRUCK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px"><path d="M1 4h13v12H1zM14 8h4l3 3v5h-7"/><circle cx="6" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>';
   var ov, dr, bd, totEl, ft, pp, built = false;
   function build() {
     if (built || !document.body) return; built = true;
     ov = document.createElement('div'); ov.id = 'sg-ov';
     dr = document.createElement('aside'); dr.id = 'sg-dr';
     dr.setAttribute('role', 'dialog'); dr.setAttribute('aria-modal', 'true'); dr.setAttribute('aria-label', 'Shopping cart');
-    dr.innerHTML = '<div class="hd"><b>Your cart</b><button type="button" class="x" aria-label="Close cart">×</button></div>' +
+    dr.innerHTML = '<div class="hd"><b>' + ICON_CART.replace('width="18" height="18"','width="22" height="22"') + ' Your cart</b><button type="button" class="x" aria-label="Close cart">' + ICON_CLOSE + '</button></div>' +
       '<div class="bd"></div>' +
       '<div class="ft"><div class="tot"><span>Subtotal</span><span id="sg-tot">$0.00</span></div>' +
-      '<div class="note">Free shipping. Secure checkout with PayPal.</div><div id="sg-pp"></div></div>';
+      '<div class="note">' + ICON_TRUCK + ' Free shipping &nbsp;·&nbsp; ' + ICON_LOCK + ' Secure checkout with PayPal</div><div id="sg-pp"></div></div>';
     document.body.appendChild(ov); document.body.appendChild(dr);
     bd = dr.querySelector('.bd'); totEl = dr.querySelector('#sg-tot'); ft = dr.querySelector('.ft'); pp = dr.querySelector('#sg-pp');
     dr.querySelector('.x').addEventListener('click', close);
@@ -85,7 +92,9 @@
     document.querySelectorAll('[data-sg-cart-count]').forEach(function (n) { n.textContent = count(); });
     if (!built) return;
     bd.textContent = '';
-    if (!items.length) bd.appendChild(el('p', 'empty', 'Your cart is empty.'));
+    if (!items.length) {
+      var em = el('div', 'empty'); em.innerHTML = ICON_CART_BIG + '<p style="margin:10px 0 0">Your cart is empty.</p>'; bd.appendChild(em);
+    }
     items.forEach(function (i) {
       var row = el('div', 'row');
       var img = el('img'); img.alt = ''; if (typeof i.image === 'string' && i.image.charAt(0) === '/') img.src = i.image;
@@ -98,7 +107,7 @@
       q.appendChild(btn('+', 'inc', i.sku, 'Increase quantity'));
       info.appendChild(q);
       row.appendChild(img); row.appendChild(info);
-      var rm = btn('Remove', 'rm', i.sku); rm.className = 'rm'; row.appendChild(rm);
+      var rm = btn('', 'rm', i.sku, 'Remove ' + i.name); rm.className = 'rm'; rm.innerHTML = ICON_TRASH; row.appendChild(rm);
       bd.appendChild(row);
     });
     totEl.textContent = money(total());

@@ -20,6 +20,7 @@
     'site-header a.sg-brand{display:flex;align-items:center;gap:10px;font-family:"Fraunces",serif;font-weight:700;font-size:20px;color:#2B2420;text-decoration:none;}' +
     'site-header nav a{font-size:14px;font-weight:600;color:#6B6354;text-decoration:none;margin-left:20px;}' +
     'site-header nav a:hover,site-footer a:hover{color:#2B2420;}' +
+    'site-header nav a.sg-cartlink{display:inline-flex;align-items:center;gap:6px;color:#2B2420;}' +
     'site-footer{border-top:1px solid #E5DCC9;margin-top:48px;}' +
     'site-footer .sg-in{display:flex;flex-wrap:wrap;gap:10px 24px;justify-content:space-between;align-items:center;padding-top:28px;padding-bottom:36px;font-size:13px;color:#6B6354;}' +
     'site-footer .sg-links{display:flex;flex-wrap:wrap;gap:8px 20px;}' +
@@ -34,7 +35,7 @@
     connectedCallback() {
       this.innerHTML = '<div class="sg-in"><a class="sg-brand" href="/">' + sun + BRAND + '</a>' +
         '<nav aria-label="Main"><a href="/">Shop</a><a href="/contact/">Contact</a>' +
-        (window.sgCart ? '<a href="#" data-sg-cart-open>Cart (<span data-sg-cart-count>' + sgCart.count() + '</span>)</a>' : '') + '</nav></div>';
+        (window.sgCart ? '<a href="#" data-sg-cart-open aria-label="Open cart" class="sg-cartlink"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-3px"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.6 12.2a1.6 1.6 0 0 0 1.6 1.3h8.1a1.6 1.6 0 0 0 1.6-1.2L20.7 7H6"/></svg> <span>Cart (<span data-sg-cart-count>' + sgCart.count() + '</span>)</span></a>' : '') + '</nav></div>';
     }
   });
 
