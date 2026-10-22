@@ -151,7 +151,7 @@
 
       <a href="#" id="pf-add" class="pf-buy" style="display: block; text-align: center; background: #C4501F; color: #fff; padding: 17px 30px; border-radius: 12px; font-weight: 700; font-size: 16px; margin-bottom: 14px;">Add to Cart — $24.99</a>
       <div id="pf-paypal-wrap" style="margin-bottom: 14px; min-height: 48px;">
-        <div style="text-align: center; font-size: 12px; color: #6B6354; margin: 0 0 10px;">or pay with PayPal</div>
+        <div style="text-align: center; font-size: 12px; color: #6B6354; margin: 0 0 10px;">Secure checkout with PayPal</div>
         <div id="pf-paypal"></div>
       </div>
 
@@ -322,49 +322,10 @@
   }
 })();
 </script>
-<div id="pf-wl" role="dialog" aria-modal="true" aria-labelledby="pf-wl-title" style="display: none; position: fixed; inset: 0; z-index: 80; background: rgba(43,36,32,0.55); align-items: center; justify-content: center; padding: 16px;">
-  <div style="position: relative; background: #fff; border-radius: 20px; max-width: 420px; width: 100%; padding: 32px 24px 24px; text-align: center;">
-    <button type="button" id="pf-wl-close" aria-label="Close" style="position: absolute; top: 8px; right: 14px; background: none; border: 0; font-size: 28px; line-height: 1; cursor: pointer; color: #6B6354;">×</button>
-    <div style="font-size: 36px; margin-bottom: 8px;">🐾</div>
-    <h2 id="pf-wl-title" class="pf-h" style="font-size: 24px; margin: 0 0 10px;">Not on sale just yet</h2>
-    <p style="font-size: 15px; line-height: 1.6; color: #4A4238; margin: 0 0 18px;">Thanks for your interest! We're not taking orders yet, but we're launching soon. Nothing has been charged.</p>
-    <button type="button" id="pf-wl-ok" style="background: #C4501F; color: #fff; border: 0; border-radius: 999px; padding: 13px 28px; font: 700 15px 'Figtree', sans-serif; cursor: pointer;">Got it</button>
-  </div>
-</div>
 <script>
 (function () {
-  // Paddle SANDBOX catalog: one product + one $24.99 price per color/size variant
-  var PRICES = {
-    'orange-small': 'pri_01m57fd8mntbnsa3a8ehq3vj41',
-    'orange-medium': 'pri_01m57fd8yfze2fx77qdpk62km0',
-    'orange-large': 'pri_01m57fd97v4kfw6y83kgh13w6q',
-    'blue-small': 'pri_01m57fd9s8sjb0g83c81qbe5fv',
-    'blue-medium': 'pri_01m57fda394d40qynbdbnq8108',
-    'blue-large': 'pri_01m57fdae0r6ph6834zfp03356',
-    'green-small': 'pri_01m57fdaqyv95ssqxt4b5nwdb4',
-    'green-medium': 'pri_01m57fdb2y8c7mecxy4fezttwp',
-    'green-large': 'pri_01m57fdbcw758cvfmf2gbw0qzp'
-  };
   var UNIT = 24.99;
   var state = { color: 'green', size: 'medium', view: 'video', qty: 1 };
-  // Paddle.js loads after the page is idle (keeps it off the critical path); a click loads it on demand.
-  var paddleReady = false, paddleLoading = null;
-  function loadPaddle() {
-    if (paddleLoading) return paddleLoading;
-    paddleLoading = new Promise(function (resolve, reject) {
-      var sc = document.createElement('script');
-      sc.src = 'https://cdn.paddle.com/paddle/v2/paddle.js';
-      sc.onload = function () {
-        Paddle.Environment.set('sandbox');
-        Paddle.Initialize({ token: 'test_236f54bc89b1d616f06720798c5' });
-        paddleReady = true;
-        resolve();
-      };
-      sc.onerror = function (e) { paddleLoading = null; reject(e); };
-      document.head.appendChild(sc);
-    });
-    return paddleLoading;
-  }
   // ---- PayPal Smart Buttons (client-side order; Client ID is public) ----
   var PAYPAL_CLIENT_ID = 'BAABlWHhEzPKIWCijcZMmeT8hAwi8g6tkdX4zws5uTsKlHxn1YlGoDn5rohNgQvuoi6dZG0ZiyJx5QDvQ4';
   var paypalLoading = null;
@@ -406,25 +367,20 @@
             }]
           });
         },
+        onClick: function () { sgTrack('InitiateCheckout', trackParams()); },
         onApprove: function (data, actions) {
           return actions.order.capture().then(function (details) {
-            location.href = '/thank-you/?order=' + encodeURIComponent(details.id);
+            location.href = '/thank-you/?order=' + encodeURIComponent(details.id) + '&value=' + (UNIT * state.qty).toFixed(2);
           });
         },
         onError: function (err) { console.error('PayPal error', err); }
       }).render('#pf-paypal');
     }).catch(function () {
-      var w = document.getElementById('pf-paypal-wrap'); if (w) w.style.display = 'none';
+      var el = document.getElementById('pf-paypal'); if (el) el.innerHTML = '<p style="text-align:center;font-size:13px;color:#6B6354;">Checkout couldn\'t load. Please refresh the page.</p>';
     });
   }
-  // WAITLIST MODE: no payments are taken; Add to Cart records the event and shows a "not on sale yet" note.
-  // Set to false to switch real checkout (Paddle / PayPal) back on.
-  var WAITLIST = true;
   var skuNow = function () { return 'pawfresh-' + state.color + '-' + state.size; };
   var trackParams = function () { return { content_ids: [skuNow()], content_name: 'PawFresh Paw Washer - ' + cap(state.color) + ' / ' + cap(state.size), content_type: 'product', value: +(UNIT * state.qty).toFixed(2), currency: 'USD', num_items: state.qty }; };
-  var wl = document.getElementById('pf-wl');
-  function showWaitlist() { wl.style.display = 'flex'; }
-  function hideWaitlist() { wl.style.display = 'none'; }
   var videoOk = false;
   function ensureVideo() {
     var v = document.getElementById('pf-video');
@@ -435,7 +391,7 @@
   window.addEventListener('load', function () {
     videoOk = true;
     if (state.view === 'video') ensureVideo();
-    (window.requestIdleCallback || function (f) { setTimeout(f, 1500); })(function () { if (WAITLIST) return; loadPaddle().catch(function () {}); renderPayPal(); });
+    (window.requestIdleCallback || function (f) { setTimeout(f, 1500); })(renderPayPal);
   });
   var names = { orange: 'Orange', blue: 'Blue', green: 'Green' };
   var src = function (c, z) { return 'assets/variants/' + c + '-' + z + '.webp'; };
@@ -483,32 +439,17 @@
   document.getElementById('pf-qty-plus').addEventListener('click', function () {
     state.qty = Math.min(10, state.qty + 1); render();
   });
+  // Add to Cart / Get Yours: record the intent and bring the PayPal button into view
   document.querySelectorAll('.pf-buy').forEach(function (b) {
     b.addEventListener('click', function (e) {
       e.preventDefault();
       sgTrack('AddToCart', trackParams());
-      if (WAITLIST) { showWaitlist(); return; }
-      sgTrack('InitiateCheckout', trackParams());
-      loadPaddle().then(function () {
-        Paddle.Checkout.open({
-          items: [{ priceId: PRICES[state.color + '-' + state.size], quantity: state.qty }],
-          settings: {
-            displayMode: 'overlay',
-            variant: 'one-page',
-            theme: 'light',
-            showAddDiscounts: false,
-            showAddTaxId: false,
-            allowLogout: false
-          }
-        });
-      }).catch(function (err) { console.error('Paddle.js failed to load', err); });
+      var w = document.getElementById('pf-paypal-wrap');
+      w.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      w.style.boxShadow = '0 0 0 3px #3A6B5C'; w.style.borderRadius = '14px';
+      setTimeout(function () { w.style.boxShadow = 'none'; }, 1600);
     });
   });
-  document.getElementById('pf-wl-close').addEventListener('click', hideWaitlist);
-  document.getElementById('pf-wl-ok').addEventListener('click', hideWaitlist);
-  wl.addEventListener('click', function (e) { if (e.target === wl) hideWaitlist(); });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hideWaitlist(); });
-  if (WAITLIST) { var ppw = document.getElementById('pf-paypal-wrap'); if (ppw) ppw.style.display = 'none'; }
   // Events: product view, video play, scroll depth
   sgTrack('ViewContent', trackParams(), true);
   document.getElementById('pf-video').addEventListener('play', function () { sgTrack('VideoPlay', {}, true); });
