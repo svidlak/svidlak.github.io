@@ -58,6 +58,7 @@
 </style>
 <script src="/shared/layout.js"></script>
 <script src="/shared/analytics.js"></script>
+<script src="/shared/cart.js"></script>
 </head>
 <body>
 
@@ -87,6 +88,7 @@
       <a href="#guarantee">Guarantee</a>
     </div>
     <a href="#" class="pf-buy" style="background: #C4501F; color: #fff; padding: 11px 22px; border-radius: 999px; font-weight: 700; font-size: 14px;">Get Yours — $24.99</a>
+    <button type="button" data-sg-cart-open aria-label="Open cart" style="background: #fff; border: 1px solid #E5DCC9; border-radius: 999px; padding: 9px 16px; font: 700 14px 'Figtree', sans-serif; color: #2B2420; cursor: pointer;">Cart (<span data-sg-cart-count>0</span>)</button>
   </div>
 
   <main>
@@ -150,10 +152,7 @@
       </div>
 
       <a href="#" id="pf-add" class="pf-buy" style="display: block; text-align: center; background: #C4501F; color: #fff; padding: 17px 30px; border-radius: 12px; font-weight: 700; font-size: 16px; margin-bottom: 14px;">Add to Cart — $24.99</a>
-      <div id="pf-paypal-wrap" style="margin-bottom: 14px; min-height: 48px;">
-        <div style="text-align: center; font-size: 12px; color: #6B6354; margin: 0 0 10px;">Secure checkout with PayPal</div>
-        <div id="pf-paypal"></div>
-      </div>
+
 
       <div style="display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; font-size: 12px; font-weight: 600; color: #6B6354;">
         <span>✓ Free shipping</span>
@@ -326,59 +325,7 @@
 (function () {
   var UNIT = 24.99;
   var state = { color: 'green', size: 'medium', view: 'video', qty: 1 };
-  // ---- PayPal Smart Buttons (client-side order; Client ID is public) ----
-  var PAYPAL_CLIENT_ID = 'BAABlWHhEzPKIWCijcZMmeT8hAwi8g6tkdX4zws5uTsKlHxn1YlGoDn5rohNgQvuoi6dZG0ZiyJx5QDvQ4';
-  var paypalLoading = null;
   function cap(t) { return t.charAt(0).toUpperCase() + t.slice(1); }
-  function loadPayPal() {
-    if (paypalLoading) return paypalLoading;
-    paypalLoading = new Promise(function (resolve, reject) {
-      var sc = document.createElement('script');
-      sc.src = 'https://www.paypal.com/sdk/js?client-id=' + PAYPAL_CLIENT_ID + '&currency=USD&intent=capture&components=buttons';
-      sc.onload = resolve;
-      sc.onerror = function (e) { paypalLoading = null; reject(e); };
-      document.head.appendChild(sc);
-    });
-    return paypalLoading;
-  }
-  function renderPayPal() {
-    loadPayPal().then(function () {
-      paypal.Buttons({
-        style: { layout: 'vertical', shape: 'pill', label: 'paypal', height: 48 },
-        createOrder: function (data, actions) {
-          var qty = state.qty, sku = 'pawfresh-' + state.color + '-' + state.size;
-          var total = (UNIT * qty).toFixed(2);
-          return actions.order.create({
-            purchase_units: [{
-              description: 'PawFresh Paw Washer Kit',
-              custom_id: sku,
-              amount: {
-                currency_code: 'USD',
-                value: total,
-                breakdown: { item_total: { currency_code: 'USD', value: total } }
-              },
-              items: [{
-                name: 'PawFresh Paw Washer - ' + cap(state.color) + ' / ' + cap(state.size),
-                sku: sku,
-                category: 'PHYSICAL_GOODS',
-                quantity: String(qty),
-                unit_amount: { currency_code: 'USD', value: UNIT.toFixed(2) }
-              }]
-            }]
-          });
-        },
-        onClick: function () { sgTrack('InitiateCheckout', trackParams()); },
-        onApprove: function (data, actions) {
-          return actions.order.capture().then(function (details) {
-            location.href = '/thank-you/?order=' + encodeURIComponent(details.id) + '&value=' + (UNIT * state.qty).toFixed(2);
-          });
-        },
-        onError: function (err) { console.error('PayPal error', err); }
-      }).render('#pf-paypal');
-    }).catch(function () {
-      var el = document.getElementById('pf-paypal'); if (el) el.innerHTML = '<p style="text-align:center;font-size:13px;color:#6B6354;">Checkout couldn\'t load. Please refresh the page.</p>';
-    });
-  }
   var skuNow = function () { return 'pawfresh-' + state.color + '-' + state.size; };
   var trackParams = function () { return { content_ids: [skuNow()], content_name: 'PawFresh Paw Washer - ' + cap(state.color) + ' / ' + cap(state.size), content_type: 'product', value: +(UNIT * state.qty).toFixed(2), currency: 'USD', num_items: state.qty }; };
   var videoOk = false;
@@ -391,7 +338,6 @@
   window.addEventListener('load', function () {
     videoOk = true;
     if (state.view === 'video') ensureVideo();
-    (window.requestIdleCallback || function (f) { setTimeout(f, 1500); })(renderPayPal);
   });
   var names = { orange: 'Orange', blue: 'Blue', green: 'Green' };
   var src = function (c, z) { return 'assets/variants/' + c + '-' + z + '.webp'; };
@@ -439,15 +385,17 @@
   document.getElementById('pf-qty-plus').addEventListener('click', function () {
     state.qty = Math.min(10, state.qty + 1); render();
   });
-  // Add to Cart / Get Yours: record the intent and bring the PayPal button into view
+  // Add to Cart / Get Yours: put the selected variant in the cart and open the cart drawer
   document.querySelectorAll('.pf-buy').forEach(function (b) {
     b.addEventListener('click', function (e) {
       e.preventDefault();
-      sgTrack('AddToCart', trackParams());
-      var w = document.getElementById('pf-paypal-wrap');
-      w.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      w.style.boxShadow = '0 0 0 3px #3A6B5C'; w.style.borderRadius = '14px';
-      setTimeout(function () { w.style.boxShadow = 'none'; }, 1600);
+      sgCart.add({
+        sku: skuNow(),
+        name: 'PawFresh Paw Washer - ' + cap(state.color) + ' / ' + cap(state.size),
+        price: UNIT,
+        image: '/paw-washer/assets/variants/' + state.color + '-' + state.size + '.webp',
+        qty: state.qty
+      });
     });
   });
   // Events: product view, video play, scroll depth

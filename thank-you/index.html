@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="/shared/fonts.css">
 <script src="/shared/layout.js"></script>
 <script src="/shared/analytics.js"></script>
+<script src="/shared/cart.js"></script>
 <style>
   body { margin:0; background:#F7F2E9; color:#2B2420; font-family:'Figtree',sans-serif; line-height:1.7; overflow-x:hidden; }
   main { max-width:620px; margin:0 auto; padding:56px 20px 24px; text-align:center; }
@@ -38,6 +39,7 @@
   if (id && /^[A-Za-z0-9_-]{6,40}$/.test(id)) {
     document.getElementById('order-id').textContent = id;
     document.getElementById('order-wrap').style.display = 'block';
+    try { localStorage.removeItem('sg_cart'); } catch (e) {}
     // Fire the Purchase event once per order (a refresh won't double count)
     var seenKey = 'sg_order_' + id, already = false;
     try { already = !!localStorage.getItem(seenKey); localStorage.setItem(seenKey, '1'); } catch (e) {}

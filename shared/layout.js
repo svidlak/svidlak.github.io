@@ -33,7 +33,8 @@
   customElements.define('site-header', class extends HTMLElement {
     connectedCallback() {
       this.innerHTML = '<div class="sg-in"><a class="sg-brand" href="/">' + sun + BRAND + '</a>' +
-        '<nav aria-label="Main"><a href="/">Shop</a><a href="/contact/">Contact</a></nav></div>';
+        '<nav aria-label="Main"><a href="/">Shop</a><a href="/contact/">Contact</a>' +
+        (window.sgCart ? '<a href="#" data-sg-cart-open>Cart (<span data-sg-cart-count>' + sgCart.count() + '</span>)</a>' : '') + '</nav></div>';
     }
   });
 
